@@ -1,0 +1,16 @@
+# depslib dependency file v1.0
+1700308364 source:d:\files\codeblocks\2do cuatrimestre\clinica_labo2\main.c
+	<stdio.h>
+	<stdlib.h>
+	"gestion.h"
+
+1700307665 d:\files\codeblocks\2do cuatrimestre\clinica_labo2\gestion.h
+
+1700308608 source:d:\files\codeblocks\2do cuatrimestre\clinica_labo2\gestion.c
+	<stdio.h>
+	<stdlib.h>
+	<ctype.h>
+	<string.h>
+	<time.h>
+	"gestion.h"
+
