@@ -8,7 +8,66 @@
 int nroIngresoGlobal;
 int nroPxIGlobal;
 
+/// TO DO:
+/// * GENERAR ARCHIVO (por teclado)
+/// - PXI cargado a Archivo (persistencia)
+/// - Archivo a PXI
 /// -------------------------------------------------- FUNCIONES DE PRACXINGRESO--------------------------------------------------- ///
+
+void alta_de_PxI(nodoPaciente *pacienteValido){
+    nodoIngreso *nodoIngEncontrado;
+    int nroIngreso;
+    nroIngreso = validarNroIngreso(); // es nroIngreso valido, puede o no existir.
+    if(nroIngreso == -1){
+        return;
+    }
+    nodoIngEncontrado = existeNodoIngreso(pacienteValido->listaIngreso, nroIngreso);
+    if(nodoIngEncontrado != NULL){
+        agregarPxI(&(nodoIngEncontrado->lista),nodoIngEncontrado->datoPcte.nroIngreso);
+    }else{ /// no existe
+        printf("Ingreso no existe. Por favor creelo. \n");
+        alta_de_ingreso(pacienteValido);
+    }
+}
+nodoIngreso *existeNodoIngreso(nodoIngreso *lista, int nroIngreso){
+    nodoIngreso *seg = lista;
+    while(seg != NULL){
+        if(seg->datoPcte.nroIngreso == nroIngreso){
+            return seg;
+        }
+        seg = seg->sig;
+    }
+    return NULL;
+}
+
+int validarNroIngreso(){
+    int nroIngreso;
+    int valido;
+    int iterar;
+    do
+    {
+        iterar = 0;
+        printf(">Ingrese el numero de ingreso deseado: ");
+        fflush(stdin);
+        valido = scanf("%i", &nroIngreso);
+        if(nroIngreso == -1){
+            printf("Accion cancelada. \n");
+            return -1;
+        }
+        if(valido != 1)
+        {
+            printf("Error. El numero de ingreso no es un entero valido. \n\n");
+            iterar = 1;
+        }
+        else if(nroIngreso < 1)
+        {
+            printf("Error. El numero de ingreso no puede ser negativo. Intente nuevamente.\n\n");
+            iterar = 1;
+        }
+    }
+    while(iterar == 1);
+    return nroIngreso;
+}
 
 /// Funcion que muestra todos los registros de un archivo
 /// de practicas
@@ -23,7 +82,7 @@ void mostrarArchivoPxI(char nombreArchivo[]){
             }
         }
     }else{
-        printf("Error. No se pudo abrir %s en practicas.c/mostrarArchivoPractica\n", nombreArchivo);
+        printf("Error. No se pudo abrir %s en gestion.c/mostrarArchivoPxI\n", nombreArchivo);
     }
     fclose(archivo);
 }
@@ -31,64 +90,74 @@ void mostrarArchivoPxI(char nombreArchivo[]){
 /// Muestra un registro del archivo de practicas
 void mostrarRegistroPxI(PxI registro){
     printf("\n-------------------------------------\n");
-    printf("Nro de ingreso por practica: %i\n", registro.nroIngreso);
+    printf("Nro de ingreso por practica: %i\n", registro.nroPxI);
     printf("Nro de practica: %i\n", registro.nroPractica);
     printf("Resultado: %s\n", registro.resultado);
     printf("-------------------------------------\n");
 }
 
-/// *** SE CARGA POR TECLADO ***
-/// *** ES EXCLUSIVAMENTE PARA TESTEOS ***
-void generarArchivoPxI(char nombreArchivo[]){
-    char control;
-    do{
-        PxI nuevo = crearPxI();
-        if(esPxIValido(nuevo) == 1){
-            FILE *archivo = fopen(nombreArchivo, "ab");
-            if(archivo != NULL){
-                fwrite(&nuevo, sizeof(PxI), 1, archivo);
-            }else{
-                printf("No se pudo abrir archivo %s en generarArchivoPxI. \n", nombreArchivo);
-            }
-            fclose(archivo);
-        }
+/// OBSOLETA. Se opto por una logica distinta
+/// (donde se trabaja en la lista y se pasa al archivo de la lista)
+///// *** SE CARGA POR TECLADO ***
+///// *** ES EXCLUSIVAMENTE PARA TESTEOS ***
+//void generarArchivoPxI(char nombreArchivo[]){
+//    char control;
+//    do{
+//        PxI nuevo = crearPxI();
+//        if(esPxIValido(nuevo) == 1){
+//            FILE *archivo = fopen(nombreArchivo, "ab");
+//            if(archivo != NULL){
+//                fwrite(&nuevo, sizeof(PxI), 1, archivo);
+//            }else{
+//                printf("No se pudo abrir archivo %s en generarArchivoPxI. \n", nombreArchivo);
+//            }
+//            fclose(archivo);
+//            printf("Quiere ingresar otro? (s/n): ");
+//        }else{
+//            printf("Quiere intentar de nuevo? (s/n): ");
+//        }
+//        fflush(stdin);
+//        scanf("%c", &control);
+//    }while(control == 's' || control == 's');
+//}
 
-        printf("Quiere ingresar otro/intentar de nuevo? (s/n): ");
-        fflush(stdin);
-        scanf("%c", &control);
-    }while(control == 's' || control == 's');
-}
-
-void baja_de_pXi(nodoPaciente *arbol){
+void baja_de_pXi(nodoPaciente *arbol)
+{
     char control;
     int nroPxIBorrar;
     int iterar;
-    nodoPxI *listaPxI;
+    nodoIngreso *listaIngreso;
     do{
-        listaPxI = validacionesModifPxI(arbol);
-        if(listaPxI != NULL){
-            nroPxIBorrar = validarNroPxI(listaPxI);
-            if(nroPxIBorrar == -1){
-                return;
+        listaIngreso = buscarIngreso(arbol); //
+        /// CHECKEAR SI LISTAINGRESO ES NULL O NO
+        if(listaIngreso != NULL){
+            if(listaIngreso->lista != NULL){
+                nroPxIBorrar = validarNroPxI(listaIngreso->lista);
+                if(nroPxIBorrar == -1){
+                    return;
+                }
+                borrarNodo(&(listaIngreso->lista),nroPxIBorrar);
+                iterar = 0;
             }
-             borrarNodo(&listaPxI,nroPxIBorrar);
-            iterar = 0;
         }else{
             printf(">Quiere intentar de nuevo? (s/n): ");
             fflush(stdin);
             scanf("%c", &control);
             if(control == 's' || control == 'S'){
                 iterar = 1;
-            }else{
+            }
+            else{
                 iterar = 0;
             }
         }
-    }while(iterar == 1);
+    }
+    while(iterar == 1);
 }
 
-nodoPxI *validacionesBajaPxI(nodoPaciente *arbol){
+nodoPxI *validarNodoPxI(nodoPaciente *arbol){
     nodoPaciente *pacienteBuscado = NULL;
     nodoIngreso *ingresoBuscado = NULL;
+    nodoPxI *pXiBuscado;
 
     pacienteBuscado = validarDniModificacion(arbol);
     if(pacienteBuscado == NULL){
@@ -100,69 +169,61 @@ nodoPxI *validacionesBajaPxI(nodoPaciente *arbol){
         return NULL;
     }
 
-    return ingresoBuscado->lista;
+    pXiBuscado = buscarNodoPxI(ingresoBuscado->lista);
+    if(pXiBuscado == NULL){
+        return NULL;
+    }
+
+    return pXiBuscado;
 }
 
 void borrarNodo(nodoPxI **subLista, int nroPxIBorrar){
     nodoPxI *seg;
     nodoPxI *ant;
-    if((*subLista != NULL) && (nroPxIBorrar != (*subLista)->pracXing.nroIngreso)){
+    if((*subLista != NULL) && (nroPxIBorrar == (*subLista)->pracXing.nroPxI)){
         nodoPxI *aux = *subLista;
         *subLista = (*subLista)->sig;
         free(aux);
     }else{
         seg = *subLista;
-        while((seg != NULL) && (nroPxIBorrar != seg->pracXing.nroIngreso)){
+        while((seg != NULL) && (nroPxIBorrar != seg->pracXing.nroPxI)){
             ant = seg;
             seg = seg->sig;
         }
-        ant->sig = seg->sig;
-        free(seg);
+        if(seg != NULL){
+            ant->sig = seg->sig;
+            free(seg);
+        }
     }
 }
 
-
+void printListaPxI(nodoPxI *subLista){
+    nodoPxI *seg = subLista;
+    while(seg != NULL){
+        printNodoPxI(seg);
+        seg = seg->sig;
+    }
+}
 
 void printNodoPxI(nodoPxI *nodo){
     printf("------------------------------\n");
-    printf("Numero de practica por ingreso: %i\n", nodo->pracXing.nroIngreso);
+    printf("Numero de practica por ingreso: %i\n", nodo->pracXing.nroPxI);
+    printf("Numero de ingreso: %i\n", nodo->pracXing.nroIngreso);
     printf("Numero de practica: %i\n", nodo->pracXing.nroPractica);
     printf("Resultado: %s\n", nodo->pracXing.resultado);
     printf("------------------------------\n");
 }
 
-nodoPxI *validacionesModifPxI(nodoPaciente *arbol){
-    nodoPaciente *pacienteBuscado = NULL;
-    nodoIngreso *ingresoBuscado = NULL;
-    nodoPxI *pXiBuscada = NULL;
-
-    pacienteBuscado = validarDniModificacion(arbol);
-    if(pacienteBuscado == NULL){
-        return NULL;
-    }
-
-    ingresoBuscado = validarIngresoModificacion(pacienteBuscado->listaIngreso);
-    if(ingresoBuscado == NULL){
-        return NULL;
-    }
-
-    pXiBuscada = buscarNodoPxI(ingresoBuscado->lista);
-    if(pXiBuscada == NULL){
-        return NULL;
-    }
-    return pXiBuscada;
-}
-
-void modificacion_de_PxI(nodoPaciente *arbol, int eleccion){
+void modificacion_de_PxI(nodoPaciente *arbol){
     int iterar;
     char control;
     nodoPxI *nodoAmodificar = NULL;
     do{
         if(nodoAmodificar == NULL){
-            nodoAmodificar = validacionesModifPxI(arbol);
+            nodoAmodificar = validarNodoPxI(arbol);
         }
         if(nodoAmodificar != NULL){
-            eleccionModifPxI(eleccion,nodoAmodificar);
+            eleccionModifPxI(nodoAmodificar);
             printf(">Quiere modificar otro campo de la misma practica por ingreso? (s/n): ");
         }else{
             printf(">Quiere intentar de nuevo? (s/n): ");
@@ -177,9 +238,20 @@ void modificacion_de_PxI(nodoPaciente *arbol, int eleccion){
     }while(iterar == 1);
 }
 
-void eleccionModifPxI(int eleccion, nodoPxI *nodoAmodificar){
+void eleccionModifPxI(nodoPxI *nodoAmodificar){
     char *resultado;
     int nroPractica;
+    int eleccion;
+    system("cls");
+    printNodoPxI(nodoAmodificar);
+    printf("\n-----------------\n");
+    printf("Campo a modificar\n");
+    printf("-----------------\n");
+    printf("1- Resultado.\n");
+    printf("2- Numero de practica.\n");
+    fflush(stdin);
+    printf(">Ingrese la opcion que desee: ");
+    scanf("%i", &eleccion);
     switch(eleccion){
     case 1:
         resultado = validarResultado();
@@ -189,11 +261,15 @@ void eleccionModifPxI(int eleccion, nodoPxI *nodoAmodificar){
         strcpy(nodoAmodificar->pracXing.resultado, resultado);
         break;
     case 2:
-        nroPractica = validarNroPractica(0);
+        nroPractica = validarNroPractica0();
         if(nroPractica == -1){
             return;
         }
         nodoAmodificar->pracXing.nroPractica = nroPractica;
+        break;
+    default:
+        printf("Opcion ingresada no es valida. \n");
+        return;
         break;
     }
 }
@@ -204,7 +280,7 @@ int validarNroPxI(nodoPxI *subLista){
     int nroPxI;
     int valido;
     do{
-        printf(">Ingrese la edad deseada: ");
+        printf(">Ingrese el numero de practica por ingreso: ");
         fflush(stdin);
         valido = scanf("%i", &nroPxI);
         if(nroPxI == -1){
@@ -228,7 +304,7 @@ nodoPxI *buscarNodoPxI(nodoPxI *subLista){
         return NULL;
     }
     while(seg != NULL){
-        if(seg->pracXing.nroIngreso == nroPxIBuscado){
+        if(seg->pracXing.nroPxI == nroPxIBuscado){
             return seg;
         }
         seg = seg->sig;
@@ -236,16 +312,17 @@ nodoPxI *buscarNodoPxI(nodoPxI *subLista){
     return NULL;
 }
 
-nodoPxI *alta_de_PxI(nodoPxI *subLista){
+/// ****FUNCIONA
+void agregarPxI(nodoPxI **subLista, int nroIngresoPadre){
     PxI PxInuevo;
     int iterar;
     int esValido; // si la carga de la PxI fue cancelada (1) o no (0)
     char control;
     do{
-        PxInuevo = crearPxI();
+        PxInuevo = crearPxI(nroIngresoPadre);
         esValido = esPxIValido(PxInuevo);
         if(esValido == 1){
-            subLista = agregarPxIAlFinal(subLista, crearNodoPxI(PxInuevo));
+            agregarPxIAlFinal(subLista, crearNodoPxI(PxInuevo));
             iterar = 0;
             printf(">Quiere ingresar otra? (s/n): \n");
         }else{
@@ -259,25 +336,24 @@ nodoPxI *alta_de_PxI(nodoPxI *subLista){
             iterar = 0;
         }
     }while(iterar == 1);
-    return subLista;
 }
 
-nodoPxI *agregarPxIAlFinal(nodoPxI *subLista, nodoPxI *nuevoNodo)
+/// ****FUNCIONA
+void agregarPxIAlFinal(nodoPxI **subLista, nodoPxI *nuevoNodo)
 {
-    if(subLista == NULL)
+    if(*subLista == NULL)
     {
-        subLista = nuevoNodo;
+        *subLista = nuevoNodo;
     }
     else
     {
-        nodoPxI *seg = subLista;
+        nodoPxI *seg = *subLista;
         while(seg->sig != NULL)
         {
             seg = seg->sig;
         }
         seg->sig = nuevoNodo;
     }
-    return subLista;
 }
 
 /// Verifica si el paciente creado es valido o si se
@@ -302,13 +378,16 @@ nodoPxI *crearNodoPxI(PxI pracXing){
     return nuevo;
 }
 
-/// Crea un paciente utilizando todas las funciones de validacion
-PxI crearPxI(){
+PxI crearPxI(int nroIngresoPadre){
     PxI nuevo;
-    nroPxIGlobal++;
-    nuevo.nroIngreso = nroIngresoGlobal;
 
-    nuevo.nroPractica = validarNroPractica(1);
+    nuevo.nroIngreso = nroIngresoPadre;
+
+    actualizarNroGlobal("nroPxI.bin");
+    nroPxIGlobal++;
+    nuevo.nroPxI = nroPxIGlobal;
+
+    nuevo.nroPractica = validarNroPractica0();
     if (nuevo.nroPractica == -1){
         return nuevo;
     }
@@ -318,6 +397,7 @@ PxI crearPxI(){
         return nuevo;
     }
 
+    escribirNroArchivo("nroPxI.bin");
     return nuevo;
 }
 
@@ -360,7 +440,7 @@ int esResultadoValido(const char *cadena){
 int existeNroPxI(nodoPxI *subLista, int nroPxIBuscado){
     nodoPxI *seg = subLista;
     while(seg != NULL){
-        if(seg->pracXing.nroIngreso == nroPxIBuscado){
+        if(seg->pracXing.nroPxI == nroPxIBuscado){
             return 1;
         }
         seg = seg->sig;
@@ -451,26 +531,32 @@ char* fechaConcatenada()
     int mes = fGetMonthNumber();
     int anio = fGetAnioLarge();
 
-    char date[10];
+    char* date = (char*)malloc(10 * sizeof(char));
+    if (date == NULL) {
+        return NULL;
+    }
     date[0] = '\0';
 
     sprintf(date + strlen(date), "%d/", dia);
     sprintf(date + strlen(date), "%d/", mes);
     sprintf(date + strlen(date), "%d", anio);
 
-    return strdup(date);
+    return date;
 }
 
 char* fechaFormatear(int dia, int mes, int anio)
 {
-    char date[10];
-    date[0] = '\0';
+    char* fecha = (char*)malloc(10 * sizeof(char));
+    if (fecha == NULL) {
+        return NULL;
+    }
+    fecha[0] = '\0';
 
-    sprintf(date + strlen(date), "%d/", dia);
-    sprintf(date + strlen(date), "%d/", mes);
-    sprintf(date + strlen(date), "%d", anio);
+    sprintf(fecha + strlen(fecha), "%d/", dia);
+    sprintf(fecha + strlen(fecha), "%d/", mes);
+    sprintf(fecha + strlen(fecha), "%d", anio);
 
-    return strdup(date);
+    return strdup(fecha);
 }
 
 int obtenerDiasMes(int mes, int anio)
@@ -509,8 +595,53 @@ int obtenerDiasMes(int mes, int anio)
 
 /// -------------------------------------------------- FUNCIONES DE INGRESOS ----------------------------------------------------- ///
 
+void printIngresos(nodoIngreso *lista){
+    nodoIngreso *seg = lista;
+
+    while(seg != NULL){
+        nodoPxI *segPxI = seg->lista;
+        printf("=============================================\n");
+        printf("Numero de ingreso: %i\n", seg->datoPcte.nroIngreso);
+        printf("Fecha de ingreso: %.10s\n", seg->datoPcte.fechaIngreso);
+        printf("Fecha de retiro: %.10s\n", seg->datoPcte.fechaRetiro);
+        printf("DNI: %i\n", seg->datoPcte.dniPcte);
+        printf("Matricula profesional: %i\n", seg->datoPcte.matrProfesional);
+        printf("Eliminado: %i\n", seg->datoPcte.eliminado);
+        while(segPxI != NULL){
+            printf("-----------------------------\n");
+            printf("Numero de practica por ingreso: %i\n", segPxI->pracXing.nroPxI);
+            printf("Numero de ingreso: %i\n", segPxI->pracXing.nroIngreso);
+            printf("Numero de practica: %i\n", segPxI->pracXing.nroPractica);
+            printf("Resultado: %s\n", segPxI->pracXing.resultado);
+            printf("-----------------------------\n");
+            segPxI = segPxI->sig;
+        }
+        seg = seg->sig;
+    }
+    printf("=============================================\n");
+}
+
+nodoIngreso *buscarIngreso(nodoPaciente *arbol){
+    nodoPaciente *pacienteBuscado = NULL;
+    nodoIngreso *ingresoBuscado = NULL;
+
+    pacienteBuscado = validarDniModificacion(arbol);
+    if(pacienteBuscado == NULL){
+        return NULL;
+    }
+
+    ingresoBuscado = validarIngresoModificacion(pacienteBuscado->listaIngreso);
+    if(ingresoBuscado == NULL){
+        return NULL;
+    }
+
+    return ingresoBuscado;
+}
+
+/// HACERLE DO WHILE A ESTA FUNCION (FIJARSE SI ESTA BIEN HACERLE ESO)
 nodoIngreso *validarIngresoModificacion(nodoIngreso *lista){
     int nroIngreso;
+    nodoIngreso *nodoAmodificar;
     printf(">Ingrese el numero de ingreso: ");
     fflush(stdin);
     int validoNroIngreso = scanf("%i", &nroIngreso);
@@ -519,15 +650,45 @@ nodoIngreso *validarIngresoModificacion(nodoIngreso *lista){
         return NULL;
     }
     if(validoNroIngreso != 1){
-        printf("Error. El numero de ingreso contiene caracteres no numericos. \n\n");
+        printf("Error. El numero de ingreso contiene caracteres no numericos. Intente nuevamente.\n\n");
+        return NULL;
+    }else if(nroIngreso < 1){
+        printf("Error. El numero de ingreso no puede ser menor a 1. Intente nuevamente.\n\n");
         return NULL;
     }
-    nodoIngreso *nodoAmodificar = existeIngresoNodo(lista, nroIngreso);
+    nodoAmodificar = existeIngresoNodo(lista, nroIngreso);
     if(nodoAmodificar == NULL){
         printf("Error. El numero de ingreso no existe.\n\n");
         return NULL;
     }
     return nodoAmodificar;
+}
+
+/// pacienteValido es el paciente que se busco anterior a esta funcion
+/// que es valido en todos sus sentidos y existe creado en el arbol.
+void alta_de_ingreso(nodoPaciente *pacienteValido){
+    int iterar;
+    char control;
+    stIngresos nuevoIngreso;
+    nodoIngreso *nodoIngNuevo;
+    do{
+        nuevoIngreso = cargaIngreso(pacienteValido);
+        if(esIngresoValido(nuevoIngreso) == 1){
+            nodoIngNuevo = crearNodoIngreso(nuevoIngreso);
+            agregarPxI(&(nodoIngNuevo->lista), nodoIngNuevo->datoPcte.nroIngreso);
+            agregarIngresoAlFinal(&(pacienteValido->listaIngreso), nodoIngNuevo);
+            printf(">Quiere generar otro ingreso para el mismo paciente? (s/n): ");
+            }else{
+                printf(">Quiere intentar de nuevo? (s/n): ");
+            }
+        fflush(stdin);
+        scanf("%c", &control);
+        if(control == 's' || control == 'S'){ // control n
+            iterar = 1;
+        }else{
+            iterar = 0;
+        }
+    }while(iterar == 1);
 }
 
 nodoIngreso *existeIngresoNodo(nodoIngreso *lista, int nroIngresoBuscado){
@@ -536,6 +697,7 @@ nodoIngreso *existeIngresoNodo(nodoIngreso *lista, int nroIngresoBuscado){
         if(nroIngresoBuscado == seg->datoPcte.nroIngreso){
             return seg;
         }
+        seg = seg->sig;
     }
     return NULL;
 }
@@ -547,6 +709,7 @@ nodoIngreso *crearNodoIngreso(stIngresos registro)
     nuevoNodo->datoPcte.dniPcte = registro.dniPcte;
     strcpy(nuevoNodo->datoPcte.fechaIngreso, registro.fechaIngreso);
     strcpy(nuevoNodo->datoPcte.fechaRetiro, registro.fechaRetiro);
+    nuevoNodo->datoPcte.matrProfesional = registro.matrProfesional;
     nuevoNodo->datoPcte.eliminado = registro.eliminado;
     nuevoNodo->sig = NULL;
     nuevoNodo->lista = NULL;
@@ -554,68 +717,104 @@ nodoIngreso *crearNodoIngreso(stIngresos registro)
     return nuevoNodo;
 }
 
+int esIngresoValido(stIngresos ingreso){
+
+    if (strcmp(ingreso.fechaIngreso, "-1") == 0){
+        return 0;
+    }
+
+    if (strcmp(ingreso.fechaRetiro, "-1") == 0){
+        return 0;
+    }
+
+    if(ingreso.matrProfesional == -1){
+        return 0;
+    }
+
+    return 1;
+}
+
 stIngresos cargaIngreso(nodoPaciente *raiz)
 {
-
     stIngresos nuevo;
 
     nuevo.dniPcte = raiz->datoPaciente.dni;
 
+    actualizarNroGlobal("nroIngreso.bin");
     nuevo.nroIngreso = nroIngresoGlobal++;
 
+    /// meterse en esta funcion y dar la opcion de -1 y retornar -1
     char* fechaInterna = fechaConcatenada();
     strcpy(nuevo.fechaIngreso, fechaInterna);
     free(fechaInterna);
 
+    if(strcmp(nuevo.fechaIngreso, "-1") == 0){
+        return nuevo;
+    }
+    /// meterse en esta funcion y dar la opcion de -1 y retornar -1
     char* fechaUsuario = validarFecha();
     strcpy(nuevo.fechaRetiro, fechaUsuario);
     free(fechaUsuario);
 
+    if(strcmp(nuevo.fechaRetiro, "-1") == 0){
+        return nuevo;
+    }
+
     nuevo.matrProfesional = validarMatricula();
+    if(nuevo.matrProfesional == -1){
+        return nuevo;
+    }
 
     nuevo.eliminado = 0;
+
+    escribirNroArchivo("nroIngreso.bin");
 
     return nuevo;
 }
 
-nodoIngreso *agregarIngresoAlFinal(nodoIngreso *lista, nodoIngreso *nuevoNodo)
+void agregarIngresoAlFinal(nodoIngreso **lista, nodoIngreso *nuevoNodo)
 {
-    if(lista == NULL)
+    if(*lista == NULL)
     {
-        lista = nuevoNodo;
+        *lista = nuevoNodo;
     }
     else
     {
-        nodoIngreso* seg = lista;
+        nodoIngreso* seg = *lista;
         while(seg->sig != NULL)
         {
             seg = seg->sig;
         }
         seg->sig = nuevoNodo;
     }
-    return lista;
 }
 
 int validarMatricula()
 {
     int numMatricula;
     int valido;
-
+    int iterar;
     do
     {
+        iterar = 0;
         printf(">Ingrese la matricula: ");
         fflush(stdin);
         valido = scanf("%i", &numMatricula);
+        if(numMatricula == -1){
+            return -1;
+        }
         if(valido != 1)
         {
             printf("Error. El numero de ingreso no es un entero valido. \n\n");
+            iterar = 1;
         }
-        else if(numMatricula <= 1 || numMatricula > 99999999)
+        else if(numMatricula <= 9999 || numMatricula > 99999999)
         {
             printf("Error. El numero de matricula debe tener entre 1 y 8 digitos. Ingrese uno válido.\n\n");
+            iterar = 1;
         }
     }
-    while(valido != 1);
+    while(iterar == 1);
     return numMatricula;
 }
 
@@ -625,53 +824,269 @@ char* validarFecha()
     int mes;
     int anio;
     int valido;
+    int iterar;
     do
     {
-        printf(">Ingrese el anio: ");
+        iterar = 0;
+        printf(">Ingrese el anio de retiro: ");
         fflush(stdin);
         valido = scanf("%i", &anio);
-        if(valido != 1 && (anio < fGetAnioLarge() || anio > 2050))
-        {
-            printf("Error. El anio ingresado no corresponde a uno valido.\n\n");
-        }else
-        {
-            printf(">Ingreso el mes: ");
+        if(anio == -1){
+            return "-1";
+        }
+        if(valido != 1 || (anio < fGetAnioLarge() || anio > 2050)){
+            printf("Error. El anio ingresado no corresponde a uno valido. Ingrese la fecha completa nuevamente.\n\n");
+            iterar = 1;
+            continue;
+        }else{
+            printf(">Ingrese el mes: ");
             fflush(stdin);
             valido = scanf("%i", &mes);
-            if(valido != 1 && (mes < fGetMonthNumber() || mes > 12))
+            if(mes == -1){
+                return "-1";
+            }
+            if(valido != 1 || (mes > 12 || mes < 1))
             {
-                printf("Error. El mes ingresado no corresponde a uno valido.\n\n");
+                printf("Error. El mes ingresado no corresponde a uno valido. Ingrese la fecha completa nuevamente.\n\n");
+                iterar = 1;
+                continue;
             }else
             {
                 printf("Ingrese el numero dia dia: ");
                 valido = scanf("%i", & dia);
-                if(valido != 1 && (dia < fGetDayNumber() || dia > obtenerDiasMes(mes, anio)))
+                if(dia == -1){
+                    return "-1";
+                }
+                if(valido != 1 || (dia > obtenerDiasMes(mes, anio) || dia < 1))
                 {
-                    printf("Error. El dia ingresado no corresponde a uno valido.\n\n");
+                    printf("Error. El dia ingresado no corresponde a uno valido. Ingrese la fecha completa nuevamente.\n\n");
+                    iterar = 1;
+                    continue;
                 }
             }
         }
-    }while(valido != 1);
+    }while(iterar == 1);
 
     char* formateo = fechaFormatear(dia, mes, anio);
     return formateo;
 }
 
-/// TERMINAR
-//nodoIngreso* alta_de_(nodoPaciente *arbol)
-//{
-//    int dniPcte;
-//    int valido;
-//    char control;
-//
-//    do
-//    {
-//        dniPcte = validarDni(arbol);
-//        busqueda = existePacienteNodo(arbol, dniPcte);
-//
-//    }
-//    while();
-//}
+char* validarFechaIngreso()
+{
+    int dia;
+    int mes;
+    int anio;
+    int valido;
+    int iterar;
+    do
+    {
+        iterar = 0;
+        printf(">Ingrese el anio de ingreso: ");
+        fflush(stdin);
+        valido = scanf("%i", &anio);
+        if(anio == -1){
+            return "-1";
+        }
+        if(valido != 1 || (anio < fGetAnioLarge() || anio > 2050)){
+            printf("Error. El anio ingresado no corresponde a uno valido. Ingrese la fecha completa nuevamente.\n\n");
+            iterar = 1;
+            continue;
+        }else{
+            printf(">Ingrese el mes: ");
+            fflush(stdin);
+            valido = scanf("%i", &mes);
+            if(mes == -1){
+                return "-1";
+            }
+            if(valido != 1 || (mes > 12 || mes < 1))
+            {
+                printf("Error. El mes ingresado no corresponde a uno valido. Ingrese la fecha completa nuevamente.\n\n");
+                iterar = 1;
+                continue;
+            }else
+            {
+                printf("Ingrese el numero dia dia: ");
+                valido = scanf("%i", & dia);
+                if(dia == -1){
+                    return "-1";
+                }
+                if(valido != 1 || (dia > obtenerDiasMes(mes, anio) || dia < 1))
+                {
+                    printf("Error. El dia ingresado no corresponde a uno valido. Ingrese la fecha completa nuevamente.\n\n");
+                    iterar = 1;
+                    continue;
+                }
+            }
+        }
+    }while(iterar == 1);
+
+    char* formateo = fechaFormatear(dia, mes, anio);
+    return formateo;
+}
+
+nodoIngreso *validarNodoIngreso(nodoPaciente *arbol)
+{
+    nodoPaciente *pcteBuscado = NULL;
+    nodoIngreso *pcteIngreso = NULL;
+
+    pcteBuscado = validarDniModificacion(arbol);
+    if(pcteBuscado == NULL){
+         return NULL;
+    }
+
+    pcteIngreso = validarIngresoModificacion(pcteBuscado->listaIngreso);
+    if(pcteIngreso == NULL){
+        return NULL;
+    }
+    return pcteIngreso;
+}
+
+void printNodoIngreso(nodoIngreso* nodoPrinteo){
+    printf("------------------------------\n");
+    printf("Numero de ingreso: %i\n", nodoPrinteo->datoPcte.nroIngreso);
+    printf("Fecha de ingreso: %.10s\n", nodoPrinteo->datoPcte.fechaIngreso);
+    printf("Fecha de retiro: %.10s\n", nodoPrinteo->datoPcte.fechaRetiro);
+    printf("Numero de DNI: %i\n", nodoPrinteo->datoPcte.dniPcte);
+    printf("Numero de matricula del profesional solicitante: %i\n", nodoPrinteo->datoPcte.matrProfesional);
+    printf("------------------------------\n");
+}
+
+void eleccionModifIngreso(nodoIngreso *nodoModificar)
+{
+    char* fechaIngreso;
+    char* fechaRetiro;
+    int nroMatricula;
+    int eleccion;
+    system("cls");
+    printNodoIngreso(nodoModificar);
+    printf("\n-----------------\n");
+    printf("Campo a modificar\n");
+    printf("-----------------\n");
+    printf("1- Fecha de ingreso.\n");
+    printf("2- Fecha de retiro.\n");
+    printf("2- Numero de matricula.\n");
+    fflush(stdin);
+    printf(">Ingrese la opcion que desee: ");
+    scanf("%i", &eleccion);
+    switch(eleccion){
+    case 1:
+        fechaIngreso = validarFechaIngreso();
+        if(strcmp(fechaIngreso, "-1") == 0){
+            return;
+        }
+        strcpy(nodoModificar->datoPcte.fechaIngreso, fechaIngreso);
+        break;
+    case 2:
+        fechaRetiro = validarFecha();
+        if(strcmp(fechaRetiro, "-1") == 0){
+            return;
+        }
+        strcpy(nodoModificar->datoPcte.fechaRetiro, fechaRetiro);
+        break;
+    case 3:
+        nroMatricula = validarMatricula();
+        if(nroMatricula == -1){
+            return;
+        }
+        nodoModificar->datoPcte.matrProfesional = nroMatricula;
+        break;
+    default:
+        printf("Opcion ingresada no es valida. \n");
+        return;
+        break;
+    }
+}
+
+void modificacion_de_ingresos(nodoPaciente *arbol)
+{
+    int iterar;
+    char control;
+    nodoIngreso *nodoModificar = NULL;
+
+    do{
+        if(nodoModificar == NULL)
+        {
+            nodoModificar = validarNodoIngreso(arbol);
+        }
+        if(nodoModificar != NULL)
+        {
+            eleccionModifIngreso(nodoModificar);
+            printf(">Quiere modificar otro campo del mismo ingreso? (s/n): ");
+        }else{
+            printf(">Quiere intentar de nuevo? (s/n): ");
+        }
+        fflush(stdin);
+        scanf("%c", &control);
+        if(control == 's' || control == 'S'){
+            iterar = 1;
+        }else{
+            iterar = 0;
+        }
+
+    }while(iterar == 1);
+}
+
+void eliminarNodo(nodoIngreso** lista, int dni)
+{
+    if((*lista) && ((*lista)->datoPcte.dniPcte) == dni)
+    {
+        nodoIngreso* aux = *lista;
+        *lista = (*lista)->sig;
+        free(aux);
+    }else{
+        nodoIngreso* ante = *lista;
+		nodoIngreso* seg = (*lista)->sig;
+		while(seg && (*lista)->datoPcte.dniPcte != dni){
+            ante = seg;
+            seg = seg->sig;
+        }
+        if(seg){
+            ante->sig = seg->sig;
+            free(seg);
+        }
+    }
+}
+
+void liberarListaPxI(nodoPxI** subLista)
+{
+    if(subLista){
+        nodoPxI* aux = *subLista;
+        *subLista = (*subLista)->sig;
+        free(aux);
+    }
+}
+
+void baja_de_ingresos(nodoPaciente *arbol){
+    char control;
+    int iterar;
+    int nroDni;
+    nodoPaciente *pcteIngreso;
+    do{
+        nroDni = validarDni(arbol);
+        pcteIngreso = existePacienteNodo(arbol,nroDni);
+
+        if(pcteIngreso != NULL && pcteIngreso->listaIngreso != NULL){
+            liberarListaPxI(&(pcteIngreso->listaIngreso->lista));
+            if(pcteIngreso->listaIngreso == NULL){
+                eliminarNodo(&(pcteIngreso->listaIngreso), pcteIngreso->listaIngreso->datoPcte.dniPcte);
+            }
+            iterar = 0;
+
+        }else{
+            if(pcteIngreso->listaIngreso == NULL){
+                printf("El paciente no tiene ingresos. \n");
+            }
+            printf(">Quiere intentar de nuevo? (s/n): ");
+            fflush(stdin);
+            scanf("%c", &control);
+            if(control == 's' || control == 'S'){
+                iterar = 1;
+            }else{
+                iterar = 0;
+            }
+        }
+    }while(iterar == 1);
+}
 
 /// printea el numero de ingreso que esta en el archivo.
 void printNroArchivo(char nombreArchivo[])
@@ -1272,9 +1687,6 @@ int validarDni(nodoPaciente *arbol){
     return nroDni;
 }
 
-
-
-
 /// Verifica si el paciente buscado existe en el arbol o no.
 /// retorna el nodo si es encontrado, NULL si no lo encuentra.
 nodoPaciente *existePacienteNodo(nodoPaciente* arbol, int dni){
@@ -1298,8 +1710,6 @@ int existePaciente(nodoPaciente *arbol, int dni){
         return 0;
     }
 }
-
-
 /// -------------------------------------------------- FUNCIONES DE PACIENTES --------------------------------------------------- ///
 
 
@@ -1318,7 +1728,7 @@ void baja_de_practica(char nombreArchivo[], nodoPaciente *arbol){
     int valido;
     int nroPractica;
     do{
-        nroPractica = validarNroPractica(0);
+        nroPractica = validarNroPractica0();
         if(nroPractica == -1){
             return;
         }
@@ -1397,7 +1807,7 @@ void modificacion_de_practica(char nombreArchivo[]){
     int desplazamientoBytes;
     int nroPractica;
     do{
-        nroPractica = validarNroPractica(0);
+        nroPractica = validarNroPractica0();
         if(nroPractica == -1){
             return;
         }
@@ -1459,7 +1869,7 @@ void alta_de_practica(char nombreArchivo[]){
     if(archivo != NULL){
 
         /// ASIGNA CAMPOS A 'nueva'
-        nueva.nroPractica = validarNroPractica(1);
+        nueva.nroPractica = validarNroPractica1();
         if(nueva.nroPractica == -1){
             return;
         }
@@ -1542,10 +1952,7 @@ int existeNombrePractica(const char *cadena, char nombreArchivo[]){
     return 0;
 }
 
-/// Se pide un numero de practica y se verifica si es un entero valido y si
-/// el numero de practica ya existe. Se tiene que ingresar un numero hasta que
-/// ese numero sea valido mediante esos dos criterios.
-int validarNroPractica(int error){
+int validarNroPractica0(){
     int nroPractica;
     int valido;
     do{
@@ -1553,13 +1960,44 @@ int validarNroPractica(int error){
         fflush(stdin);
         valido = scanf("%i", &nroPractica);
         if(nroPractica == -1){
-            printf("Accion cancelada. \n");
+            printf("Accion cancelada. \n\n");
             return -1;
         }
         if(valido != 1){
             printf("Error. El numero de practica ingresado no es un entero valido. \n\n");
-        }else{
-            /// solucionar esta poronga
+        }else if(nroPractica < 0){
+            printf("Error. El numero de practica no puede ser negativo. \n\n");
+            valido = 0;
+        }else if(existeNroPractica("practicas.bin",nroPractica) == 0){
+            printf("Error. El numero de practica ingresado no existe. \n\n");
+            valido = 0;
+        }
+    }while(valido != 1);
+    return nroPractica;
+}
+
+/// Se pide un numero de practica y se verifica si es un entero valido y si
+/// el numero de practica ya existe. Se tiene que ingresar un numero hasta que
+/// ese numero sea valido mediante esos dos criterios.
+int validarNroPractica1(){
+    int nroPractica;
+    int valido;
+    do{
+        printf(">Ingrese el numero de practica deseado: ");
+        fflush(stdin);
+        valido = scanf("%i", &nroPractica);
+        if(nroPractica == -1){
+            printf("Accion cancelada. \n\n");
+            return -1;
+        }
+        if(valido != 1){
+            printf("Error. El numero de practica ingresado no es un entero valido. \n\n");
+        }else if(nroPractica < 0){
+            printf("Error. El numero de practica no puede ser negativo. \n\n");
+            valido = 0;
+        }else if(existeNroPractica("practicas.bin",nroPractica) == 1){
+            printf("Error. El numero de practica ingresado ya existe. \n\n");
+            valido = 0;
         }
     }while(valido != 1);
     return nroPractica;

@@ -14,3 +14,18 @@
 	<time.h>
 	"gestion.h"
 
+1700378742 source:d:\files\codeblocks\2do cuatrimestre\clinica (clon git)\final_labo_2\main.c
+	<stdio.h>
+	<stdlib.h>
+	"gestion.h"
+
+1700381132 d:\files\codeblocks\2do cuatrimestre\clinica (clon git)\final_labo_2\gestion.h
+
+1700381139 source:d:\files\codeblocks\2do cuatrimestre\clinica (clon git)\final_labo_2\gestion.c
+	<stdio.h>
+	<stdlib.h>
+	<ctype.h>
+	<string.h>
+	<time.h>
+	"gestion.h"
+
