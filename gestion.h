@@ -52,6 +52,24 @@ typedef struct{
 } Practica;
 /// ====================================================== ESTRUCTURAS ====================================================== ///
 
+/// ------------------------------------------------ FUNCIONES DE PRINTEO TOTAL -------------------------------------------- ///
+void printNodoPxI(nodoPxI *nodo);
+void printListaPxI(nodoPxI *subLista);
+void printNodoIngreso(nodoIngreso* nodoPrinteo);
+void printParcial(nodoIngreso *lista);
+void printNodoPaciente(nodoPaciente *nodo);
+void printTotal(nodoPaciente *arbol);
+/// ------------------------------------------------ FUNCIONES DE PRINTEO TOTAL -------------------------------------------- ///
+
+
+/// ------------------------------------------------ FUNCIONES DE PERSISTENCIA --------------------------------------------- ///
+void escribirPxI(FILE *archivoPxI, nodoPxI *subLista);
+void escribirIngYpXi(FILE *archivoIng, FILE *archivoPxI, nodoIngreso *lista);
+void escribirPaciente(FILE *archivo, nodoPaciente *arbol);
+void persistenciaIngYpXi(nodoIngreso *lista);
+void persistenciaTotal(nodoPaciente *arbol);
+void filesToEstructuras(nodoPaciente **arbol);
+/// ------------------------------------------------ FUNCIONES DE PERSISTENCIA --------------------------------------------- ///
 
 /// -------------------------------------------------- FUNCIONES DE PRACXING ----------------------------------------------- ///
 int esResultadoValido(const char *cadena);
@@ -73,13 +91,13 @@ void mostrarArchivoPxI(char nombreArchivo[]);
 void agregarPxI(nodoPxI **subLista, int nroIngresoPadre);
 void printListaPxI(nodoPxI *subLista);
 void printNodoPxI(nodoPxI *nodo);
-void printIngresos(nodoIngreso *lista);
 void alta_de_PxI(nodoPaciente *pacienteValido);
 nodoIngreso *existeNodoIngreso(nodoIngreso *lista, int nroIngreso);
 int validarNroIngreso();
 void baja_de_pXi(nodoPaciente *arbol);
 void modificacion_de_PxI(nodoPaciente *arbol);
 void eleccionModifPxI(nodoPxI *nodoAmodificar);
+void escribirPxI(FILE *archivo, nodoPxI *subLista);
 /// -------------------------------------------------- FUNCIONES DE PRACXING ----------------------------------------------- ///
 
 /// -------------------------------------------------- FUNCIONES DE FECHA -------------------------------------------------- ///
@@ -93,13 +111,16 @@ int fGetAnioShort();
 char* fechaConcatenada();
 char* fechaFormatear(int dia, int mes, int anio);
 int obtenerDiasMes(int mes, int anio);
+int obtenerDia(int mes, int anio);
+int obtenerMes();
+int obtenerAnio();
+char* validarFecha();
 /// -------------------------------------------------- FUNCIONES DE FECHA --------------------------------------------------- ///
 
 /// -------------------------------------------------- FUNCIONES DE INGRESOS ------------------------------------------------ ///
 nodoIngreso *crearNodoIngreso(stIngresos registro);
 void agregarIngresoAlFinal(nodoIngreso **lista, nodoIngreso *nuevoNodo);
 int validarMatricula();
-char* validarFecha();
 int esNombrePracValido(const char *cadena);
 void printNroArchivo(char nombreArchivo[]);
 void escribirNroArchivo(char nombreArchivo[]);
@@ -114,11 +135,15 @@ void alta_de_ingreso(nodoPaciente *pacienteValido);
 void eleccionModifIngreso(nodoIngreso *nodoModificar);
 void modificacion_de_ingresos(nodoPaciente *arbol);
 void printNodoIngreso(nodoIngreso* nodoPrinteo);
+void mostrarRegistroIng(stIngresos registro);
+void mostrarArchivoIng(char nombreArchivo[]);
+void baja_de_ingresos(nodoPaciente *arbol);
 /// -------------------------------------------------- FUNCIONES DE INGRESOS ------------------------------------------------ ///
 
 /// -------------------------------------------------- FUNCIONES DE PACIENTES ----------------------------------------------- ///
 int existePaciente(nodoPaciente *arbol, int dni);
-int validarDni(nodoPaciente *arbol);
+int validarDni1(nodoPaciente *arbol);
+int validarDni0(nodoPaciente *arbol);
 int validarEdad();
 int esNombreValido(const char *cadena);
 char *validarNombrePaciente();
@@ -128,20 +153,19 @@ int esTelefonoValido(const char *cadena);
 char *validarTelefonoPaciente();
 Paciente crearPaciente(nodoPaciente *arbol);
 nodoPaciente *crearNodoPaciente(Paciente dato);
-nodoPaciente *insertarNodoPaciente(nodoPaciente *arbol, Paciente dato);
-nodoPaciente *pacienteToarchivo(char nombreArchivo[], nodoPaciente *arbol);
+void insertarNodoPaciente(nodoPaciente **arbol, Paciente dato);
 void mostrarRegistroPacientes(Paciente registro);
 void mostrarArchivoPacientes(char nombreArchivo[]);
-void inorder(nodoPaciente *arbol);
-nodoPaciente *archivoToArbolPacientes(char nombreArchivo[], nodoPaciente *arbol);
+void printPacientes(nodoPaciente *arbol);
 nodoPaciente *existePacienteNodo(nodoPaciente* arbol, int dni);
 int validarEliminado();
-void eleccionModifPaciente(int eleccion, nodoPaciente *nodoAmodificar);
-void modificacion_de_paciente(nodoPaciente *arbol, int eleccion);
+void eleccionModifPaciente(nodoPaciente *nodoAmodificar);
+void modificacion_de_paciente(nodoPaciente *arbol);
 nodoPaciente *validarDniModificacion(nodoPaciente *arbol);
 void baja_de_paciente(nodoPaciente *arbol);
 int esPacienteValido(Paciente pcte);
-nodoPaciente *alta_de_paciente(nodoPaciente *arbol);
+void alta_de_paciente(nodoPaciente **arbol);
+nodoPaciente *buscarPacientePorIngreso(nodoPaciente *arbol, int nroIngreso);
 /// -------------------------------------------------- FUNCIONES DE PACIENTES ----------------------------------------------- ///
 
 /// -------------------------------------------------- FUNCIONES DE PRACTICAS ----------------------------------------------- ///
@@ -159,7 +183,6 @@ int buscarPracticaXnumero(int nroPractica);
 int NroRegistroXnombre(char nombreArchivo[], char nombrePractica[]); //comentar o no dependiendo de respuesta del profe
 int buscarPracticaXnombre(); // comentar o no dependiendo de respuesta del profe
 //void modificacion_de_practica(char nombreArchivo[], int desplazamientoBytes); // descomentar y cambiar dependiendo de respuesta del profe
-void menu_modificacion();
 void modificacion_de_practica(char nombreArchivo[]);
 int buscarPracticaSub(nodoPxI *subLista, int nroPractica);
 int buscarPracticaLista(nodoIngreso *lista, int nroPractica);

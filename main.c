@@ -5,20 +5,28 @@ extern int nroPxIGlobal;
 
 int main()
 {
+    char control;
     nodoPaciente *arbol = NULL;
-    arbol = archivoToArbolPacientes("pacientes.bin",arbol);
-    mostrarArchivoPacientes("pacientes.bin");
 
-    nodoPaciente *nodoValido = existePacienteNodo(arbol,78654321);
-    nodoIngreso *lista = NULL;
-//    if(nodoValido != NULL){
-//        alta_de_PxI(nodoValido);
-//    }
-//    printIngresos(nodoValido->listaIngreso);
-//    baja_de_pXi(arbol);
-//    modificacion_de_PxI(arbol);
-//    printIngresos(nodoValido->listaIngreso);
-    alta_de_ingreso(nodoValido);
-    printIngresos(lista);
+/// testeo de alta paciente y alta PxI y persistencia total: funcionando
+//    alta_de_paciente(&arbol);
+//    do{
+//        nodoPaciente *nodovalido = existePacienteNodo(arbol, validarDni0(arbol));
+//        alta_de_PxI(nodovalido);
+//        printf("pxi a paciente distinto?????\n");
+//        fflush(stdin);
+//        scanf("%c", &control);
+//    }while(control == 's');
+//    printTotal(arbol);
+//    persistenciaTotal(arbol);
+//    mostrarArchivoPacientes("pacientes.bin");
+//    mostrarArchivoIng("ingresos.bin");
+//    mostrarArchivoPxI("pracXing.bin");
+//    system("pause");
+/// testeo de filesToEstructuras: funcionando
+//    filesToEstructuras(&arbol);
+//    printTotal(arbol);
+
+    alta_de_paciente(&arbol);
     return 0;
 }
