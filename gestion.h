@@ -34,7 +34,7 @@ typedef struct{
     int edad;
     int dni;
     char direccion[30];
-    char telefono[30];
+    char telefono[15];
     int eliminado;
 }Paciente;
 
@@ -115,6 +115,9 @@ int obtenerDia(int mes, int anio);
 int obtenerMes();
 int obtenerAnio();
 char* validarFecha();
+struct tm convertirFecha(char *fecha);
+int obtenerAnioRandom();
+char* validarFechaRandom();
 /// -------------------------------------------------- FUNCIONES DE FECHA --------------------------------------------------- ///
 
 /// -------------------------------------------------- FUNCIONES DE INGRESOS ------------------------------------------------ ///
@@ -138,6 +141,7 @@ void printNodoIngreso(nodoIngreso* nodoPrinteo);
 void mostrarRegistroIng(stIngresos registro);
 void mostrarArchivoIng(char nombreArchivo[]);
 void baja_de_ingresos(nodoPaciente *arbol);
+void ingresosDesdeHasta();
 /// -------------------------------------------------- FUNCIONES DE INGRESOS ------------------------------------------------ ///
 
 /// -------------------------------------------------- FUNCIONES DE PACIENTES ----------------------------------------------- ///

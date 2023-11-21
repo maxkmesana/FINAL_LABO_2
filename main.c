@@ -24,9 +24,26 @@ int main()
 //    mostrarArchivoPxI("pracXing.bin");
 //    system("pause");
 /// testeo de filesToEstructuras: funcionando
-//    filesToEstructuras(&arbol);
+
 //    printTotal(arbol);
 
-    alta_de_paciente(&arbol);
+//    alta_de_paciente(&arbol);
+
+
+//    baja_de_ingresos(arbol);
+//    printTotal(arbol);
+//    ingresosDesdeHasta();
+/// retestear modif y si funciona testearla con persistencia (cambiar fechas de ingreso)
+//    modificacion_de_ingresos(arbol);
+//    printTotal(arbol);
+//    persistenciaTotal(arbol);
+//    mostrarArchivoIng("ingresos.bin");
+//    filesToEstructuras(&arbol);
+//    printTotal(arbol);
+//    modificacion_de_ingresos(arbol);
+//    printTotal(arbol);
+//    persistenciaTotal(arbol);
+//    mostrarArchivoIng("ingresos.bin");
+//    ingresosDesdeHasta();
     return 0;
 }

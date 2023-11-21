@@ -8,6 +8,57 @@
 int nroIngresoGlobal;
 int nroPxIGlobal;
 
+/// -------------------------------------------------- FUNCIONES ADICIONALES -------------------------------------------------- ///
+
+void ingresosDesdeHasta()
+{
+    stIngresos registro;
+    char* fechaDesde = (char*)malloc(sizeof(char)*10);
+    char* fechaHasta = (char*)malloc(sizeof(char)*10);
+    printf("A partir de que fecha de ingreso quiere mostrar? \n");
+    /// validarFecha?? creo que esa validacion esta mal porque no puede ser menor a fecha actual.
+    /// hacer otra funcion de validacion
+    fechaDesde = validarFechaRandom();
+    if(strcmp(fechaDesde, "-1") == 0)
+    {
+        return;
+    }
+
+    printf("Hasta que fecha de ingreso quiere mostrar? \n");
+    /// validarFecha?? creo que esa validacion esta mal porque no puede ser menor a fecha actual.
+    /// hacer otra funcion de validacion
+    fechaHasta = validarFechaRandom();
+    if(strcmp(fechaDesde, "-1") == 0)
+    {
+        return;
+    }
+    struct tm tmFechaDesde = convertirFecha(fechaDesde);
+    struct tm tmFechaHasta = convertirFecha(fechaHasta);
+    FILE *archivo = fopen("ingresos.bin", "rb");
+    if(archivo != NULL)
+    {
+        while (fread(&registro, sizeof(stIngresos), 1, archivo) == 1)
+        {
+            struct tm tmFechaIngreso = convertirFecha(registro.fechaIngreso);
+
+            /// primera condicion: se fija si fecha de ingreso es mayor o igual a fecha desde
+            /// segunda condicion: se fija si fecha de ingreso es menor o igual a fecha hasta
+            if ((difftime(mktime(&tmFechaIngreso), mktime(&tmFechaDesde)) >= 0) && (difftime(mktime(&tmFechaIngreso), mktime(&tmFechaHasta)) <= 0)){
+                mostrarRegistroIng(registro);
+            }
+        }
+
+    }
+    else
+    {
+        printf("No se pudo abrir archivo ingresos.bin en funcion ingresosDesdeHasta. \n");
+        return;
+    }
+    fclose(archivo);
+}
+
+/// -------------------------------------------------- FUNCIONES ADICIONALES -------------------------------------------------- ///
+
 
 /// -------------------------------------------------- FUNCIONES DE PRINTEO TOTAL -------------------------------------------------- ///
 void printTotal(nodoPaciente *arbol){
@@ -86,6 +137,7 @@ void filesToEstructuras(nodoPaciente **arbol){
     while(fread(&paciente, sizeof(Paciente), 1, archivoPac) == 1){
         insertarNodoPaciente(arbol, paciente);
     }
+    fclose(archivoPac);
     while(fread(&ingreso, sizeof(stIngresos), 1, archivoIng) == 1){
         nodoPaciente *pacienteEncontrado = existePacienteNodo(*arbol, ingreso.dniPcte);
         if(pacienteEncontrado != NULL){
@@ -93,6 +145,7 @@ void filesToEstructuras(nodoPaciente **arbol){
             agregarIngresoAlFinal(&(pacienteEncontrado->listaIngreso), nuevoNodoIng);
         }
     }
+    fclose(archivoIng);
     while(fread(&pXi, sizeof(PxI), 1, archivoPrac) == 1){
         nodoPaciente *pacienteEncontrado = buscarPacientePorIngreso(*arbol, pXi.nroIngreso); /// ERROR ACA
         if(pacienteEncontrado != NULL){
@@ -103,6 +156,7 @@ void filesToEstructuras(nodoPaciente **arbol){
             }
         }
     }
+    fclose(archivoPrac);
 }
 
 void persistenciaTotal(nodoPaciente *arbol){
@@ -580,6 +634,59 @@ int existeNroPxI(nodoPxI *subLista, int nroPxIBuscado){
 
 /// -------------------------------------------------- FUNCIONES DE FECHA --------------------------------------------------- ///
 
+
+
+int obtenerAnioRandom() {
+    int anio, valido;
+    do {
+        printf(">Ingrese el anio: ");
+        fflush(stdin);
+        valido = scanf("%i", &anio);
+
+        if (anio == -1) {
+            return -1;
+        }
+
+        if (valido != 1 || (anio < 2000 || anio > 2050)) {
+            printf("Error. El anio ingresado no corresponde a uno valido. Ingrese la fecha nuevamente.\n\n");
+        }
+
+    } while (valido != 1 || (anio < 2000 || anio > 2050));
+
+    return anio;
+}
+char* validarFechaRandom() {
+    int anio, mes, dia;
+    anio = obtenerAnioRandom();
+
+    if (anio == -1) {
+        return "-1";
+    }
+
+    mes = obtenerMes();
+
+    if (mes == -1) {
+        return "-1";
+    }
+
+    dia = obtenerDia(mes, anio);
+
+    if (dia == -1) {
+        return "-1";
+    }
+
+    return fechaFormatear(dia, mes, anio);
+}
+
+struct tm convertirFecha(char *fecha)
+{
+    struct tm tmFecha = {0};
+    sscanf(fecha, "%d/%d/%d", &tmFecha.tm_mday, &tmFecha.tm_mon, &tmFecha.tm_year);
+    tmFecha.tm_mon -= 1;  // Ajustar al rango de 0-11
+    tmFecha.tm_year -= 1900;  // Ajustar al año desde 1900
+    return tmFecha;
+}
+
 char* validarFecha() {
     int anio, mes, dia;
     anio = obtenerAnio();
@@ -867,8 +974,8 @@ nodoIngreso *validarIngresoModificacion(nodoIngreso *lista){
     if(validoNroIngreso != 1){
         printf("Error. El numero de ingreso contiene caracteres no numericos. Intente nuevamente.\n\n");
         return NULL;
-    }else if(nroIngreso < 1){
-        printf("Error. El numero de ingreso no puede ser menor a 1. Intente nuevamente.\n\n");
+    }else if(nroIngreso < 0){
+        printf("Error. El numero de ingreso no puede ser menor a 0. Intente nuevamente.\n\n");
         return NULL;
     }
     nodoAmodificar = existeIngresoNodo(lista, nroIngreso);
@@ -952,21 +1059,27 @@ int esIngresoValido(stIngresos ingreso){
 stIngresos cargaIngreso(nodoPaciente *raiz)
 {
     stIngresos nuevo;
+
     nuevo.dniPcte = raiz->datoPaciente.dni;
+
     actualizarNroGlobal("nroIngreso.bin");
     nuevo.nroIngreso = nroIngresoGlobal++;
 
     /// meterse en esta funcion y dar la opcion de -1 y retornar -1
-    char* fechaInterna = fechaConcatenada();
-    strcpy(nuevo.fechaIngreso, fechaInterna);
+    char* fechaInterna = (char*)malloc(sizeof(char)*10); /// revisar
+    fechaInterna = fechaConcatenada();
+    strncpy(nuevo.fechaIngreso, fechaInterna, sizeof(nuevo.fechaIngreso) -1);
+    nuevo.fechaIngreso[sizeof(nuevo.fechaIngreso) -1] = '\0';
     free(fechaInterna);
 
     if(strcmp(nuevo.fechaIngreso, "-1") == 0){
         return nuevo;
     }
     /// meterse en esta funcion y dar la opcion de -1 y retornar -1
-    char* fechaUsuario = validarFecha();
-    strcpy(nuevo.fechaRetiro, fechaUsuario);
+    char* fechaUsuario = (char*)malloc(sizeof(char)*10); /// revisar
+    fechaUsuario = validarFecha();
+    strncpy(nuevo.fechaRetiro, fechaUsuario, sizeof(nuevo.fechaRetiro) -1);
+    nuevo.fechaRetiro[sizeof(nuevo.fechaRetiro) -1] = '\0';
     free(fechaUsuario);
 
     if(strcmp(nuevo.fechaRetiro, "-1") == 0){
@@ -1031,27 +1144,28 @@ int validarMatricula()
     return numMatricula;
 }
 
+
 nodoIngreso *validarNodoIngreso(nodoPaciente *arbol)
 {
-    nodoPaciente *pcteBuscado = NULL;
-    nodoIngreso *pcteIngreso = NULL;
+    nodoPaciente *pacienteBuscado = NULL;
+    nodoIngreso *ingresoBuscado;
 
-    pcteBuscado = validarDniModificacion(arbol);
-    if(pcteBuscado == NULL){
+    pacienteBuscado = validarDniModificacion(arbol);
+    if(pacienteBuscado == NULL){
          return NULL;
     }
 
-    pcteIngreso = validarIngresoModificacion(pcteBuscado->listaIngreso);
-    if(pcteIngreso == NULL){
+    ingresoBuscado = validarIngresoModificacion(pacienteBuscado->listaIngreso);
+    if(ingresoBuscado == NULL){
         return NULL;
     }
-    return pcteIngreso;
+    return ingresoBuscado;
 }
 
 void eleccionModifIngreso(nodoIngreso *nodoModificar)
 {
-    char* fechaIngreso;
-    char* fechaRetiro;
+    char* fechaIngreso = (char*)malloc(sizeof(char)*10);
+    char* fechaRetiro = (char*)malloc(sizeof(char)*10);
     int nroMatricula;
     int eleccion;
     system("cls");
@@ -1067,20 +1181,22 @@ void eleccionModifIngreso(nodoIngreso *nodoModificar)
     scanf("%i", &eleccion);
     switch(eleccion){
     case 1:
-        /// CAMBIAR SEGUN LOGICA DE QUE ESTA PERMITIDO Y QUE NO
-        /// CREAR validarFechaIngreso Y SUPLANTAR ESE LLAMADO A VALIDARFECHA()
-        fechaIngreso = validarFecha();
+        fechaIngreso = validarFechaRandom();
         if(strcmp(fechaIngreso, "-1") == 0){
             return;
         }
-        strcpy(nodoModificar->datoPcte.fechaIngreso, fechaIngreso);
+        strncpy(nodoModificar->datoPcte.fechaIngreso, fechaIngreso, sizeof(nodoModificar->datoPcte.fechaIngreso) - 1);
+        nodoModificar->datoPcte.fechaIngreso[sizeof(nodoModificar->datoPcte.fechaIngreso) -1] = '\0';
+        free(fechaIngreso);
         break;
     case 2:
-        fechaRetiro = validarFecha();
+        fechaRetiro = validarFechaRandom();
         if(strcmp(fechaRetiro, "-1") == 0){
             return;
         }
-        strcpy(nodoModificar->datoPcte.fechaRetiro, fechaRetiro);
+        strncpy(nodoModificar->datoPcte.fechaRetiro, fechaRetiro, sizeof(nodoModificar->datoPcte.fechaRetiro) - 1);
+        nodoModificar->datoPcte.fechaRetiro[sizeof(nodoModificar->datoPcte.fechaRetiro) -1] = '\0';
+        free(fechaRetiro);
         break;
     case 3:
         nroMatricula = validarMatricula();
@@ -1167,23 +1283,23 @@ void baja_de_ingresos(nodoPaciente *arbol){
         if(pcteIngreso != NULL && pcteIngreso->listaIngreso != NULL){
             system("pause");
             liberarListaPxI(&(pcteIngreso->listaIngreso->lista));
-            if(pcteIngreso->listaIngreso == NULL){
+            if(pcteIngreso->listaIngreso->lista == NULL){
                 eliminarNodo(&(pcteIngreso->listaIngreso), pcteIngreso->listaIngreso->datoPcte.dniPcte);
             }
             iterar = 0;
-            printf("Paciente eliminado. \n");
+            printf("Ingreso eliminado. \n");
         }else{
             if(pcteIngreso->listaIngreso == NULL){
                 printf("El paciente no tiene ingresos. \n");
             }
-            printf(">Quiere intentar de nuevo? (s/n): ");
-            fflush(stdin);
-            scanf("%c", &control);
-            if(control == 's' || control == 'S'){
-                iterar = 1;
-            }else{
-                iterar = 0;
-            }
+        }
+        printf(">Quiere intentar de nuevo? (s/n): ");
+        fflush(stdin);
+        scanf("%c", &control);
+        if(control == 's' || control == 'S'){
+            iterar = 1;
+        }else{
+            iterar = 0;
         }
     }while(iterar == 1);
 }
@@ -1304,7 +1420,7 @@ void alta_de_paciente(nodoPaciente **arbol){
     int esValido; // si la carga del paciente fue cancelada (1) o no (0)
     char control;
     do{
-        printf("*ALTA DE PACIENTE**");
+        printf("*ALTA DE PACIENTE**\n");
         pacienteNuevo = crearPaciente(*arbol);
         esValido = esPacienteValido(pacienteNuevo);
         if(esValido == 1){
